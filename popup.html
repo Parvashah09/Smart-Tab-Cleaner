@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Smart Tab Cleaner</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 10px;
+      width: 220px;
+    }
+    label, input, button {
+      display: block;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h3>Inactivity Timeout</h3>
+  <label>
+  <input type="checkbox" id="toggle-active">
+  Enable Smart Tab Cleaner
+</label>
+  <label for="timeout">Minutes:</label>
+  <input type="number" id="timeout" min="1" />
+  <button id="save">Save</button>
+
+  <script src="popup.js"></script>
+</body>
+</html>
