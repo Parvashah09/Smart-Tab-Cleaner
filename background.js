@@ -23,15 +23,16 @@ chrome.storage.onChanged.addListener((changes) => {
       console.log("Extension paused: all timers cleared.");
     } else {
       chrome.tabs.query({}, (tabs) => {
-        tabs.forEach(tab => {
-          if (tab.id && !tab.pinned && !tab.audible && !tab.active && tab.url) {
-            const domain = new URL(tab.url).hostname.replace(/^www\./, "");
-            chrome.storage.local.get("ignoreDomains", (data) => {
-              if (data.ignoreDomains?.includes(domain)) return;
-              inactivityStartTimes[tab.id] = Date.now();
-              resetTimer(tab.id);
-            });
-          }
+        chrome.storage.local.get("ignoreDomains", (data) => {
+          const ignoreList = data.ignoreDomains || [];
+          tabs.forEach(tab => {
+            if (tab.id && !tab.pinned && !tab.audible && !tab.active && tab.url) {
+              const isIgnored = ignoreList.some(item => item.url === tab.url);
+              if (!isIgnored) {
+                resetTimer(tab.id);
+              }
+            }
+          });
         });
       });
       console.log("Extension resumed: timers restarted.");
@@ -39,21 +40,20 @@ chrome.storage.onChanged.addListener((changes) => {
   }
 
   if (changes.ignoreDomains) {
-    const newIgnoreDomains = (changes.ignoreDomains.newValue || []).map(d => d.replace(/^www\./, ""));
+    const newIgnoreURLs = changes.ignoreDomains.newValue || [];
 
     chrome.tabs.query({}, (tabs) => {
       tabs.forEach((tab) => {
         if (!tab.url) return;
 
-        const domain = new URL(tab.url).hostname.replace(/^www\./, "");
-        if (!newIgnoreDomains.includes(domain)) {
+        if (!newIgnoreURLs.includes(tab.url)) {
           clearTimeout(tabTimers[tab.id]);
           clearTimeout(warningTimers[tab.id]);
           delete inactivityStartTimes[tab.id];
 
           inactivityStartTimes[tab.id] = Date.now();
           resetTimer(tab.id);
-          console.log(`Timers reset for tab ${tab.id} (${domain}) due to updated ignoreDomains.`);
+          console.log(`Timers reset for tab ${tab.id} (${tab.url}) due to updated ignore list.`);
         }
       });
     });
@@ -128,9 +128,8 @@ function resetTimer(tabId) {
       const isSystemTab = url.startsWith("chrome://") || url.startsWith("chrome-devtools://");
       if (isSystemTab) return;
 
-      const domain = new URL(url).hostname.replace(/^www\./, "");
-      if (data.ignoreDomains?.includes(domain)) {
-        console.log(`Ignoring tab ${tabId} with domain: ${domain}`);
+      if (data.ignoreDomains?.includes(url)) {
+        console.log(`Ignoring tab ${tabId} with URL: ${url}`);
         return;
       }
 
@@ -216,3 +215,4 @@ chrome.runtime.onMessage.addListener((message) => {
     console.log(`Stopped tracking tab ${message.tabId} due to ignore list.`);
   }
 });
+// This is working properly!!!

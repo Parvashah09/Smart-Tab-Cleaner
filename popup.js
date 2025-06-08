@@ -7,85 +7,106 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let ignoreDomains = [];
 
+  // Load settings initially
   chrome.storage.local.get(["isExtensionActive", "inactivityLimit", "ignoreDomains"], (data) => {
     timeoutInput.value = data.inactivityLimit || "";
     toggleCheckbox.checked = data.isExtensionActive !== false;
-    ignoreDomains = (data.ignoreDomains || []).map(d => normalizeDomain(d));
+    ignoreDomains = data.ignoreDomains || [];
     renderIgnoreList(ignoreDomains);
   });
 
-  addSiteBtn.addEventListener("click", () => {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs.length === 0 || !tabs[0].url) return;
+  function renderIgnoreList(list) {
+  ignoreList.innerHTML = "";
+  list.forEach(({ url, title }) => {
+    const li = document.createElement("li");
+    li.classList.add("ignore-item");  // add class for styling
 
-      const domain = normalizeDomain(new URL(tabs[0].url).hostname);
+    let domain;
+    try {
+      domain = new URL(url).origin;
+    } catch {
+      domain = "";
+    }
 
-      if (!ignoreDomains.includes(domain)) {
-        ignoreDomains.push(domain);
-        renderIgnoreList(ignoreDomains);
-      }
+    const favicon = document.createElement("img");
+    favicon.classList.add("favicon");
+    favicon.src = domain ? `${domain}/favicon.ico` : "";
+    favicon.alt = "";
+    
+    const titleSpan = document.createElement("span");
+    titleSpan.classList.add("ignore-title");
+    titleSpan.textContent = title || url;
+
+    const removeBtn = document.createElement("button");
+    removeBtn.textContent = "X";
+    removeBtn.classList.add("remove-btn");
+    removeBtn.addEventListener("click", () => {
+      ignoreDomains = ignoreDomains.filter(item => item.url !== url);
+      updateIgnoreDomains();
     });
+
+    li.appendChild(favicon);
+    li.appendChild(titleSpan);
+    li.appendChild(removeBtn);
+    ignoreList.appendChild(li);
   });
+}
 
-  function normalizeDomain(domain) {
-    return domain.replace(/^www\./, "");
-  }
 
-  function renderIgnoreList(domains) {
-    ignoreList.innerHTML = "";
-    domains.forEach((domain) => {
-      const li = document.createElement("li");
-      li.textContent = domain;
+function updateIgnoreDomains() {
+  chrome.storage.local.get("ignoreDomains", (data) => {
+    const previous = data.ignoreDomains || [];
 
-      const removeBtn = document.createElement("button");
-      removeBtn.textContent = "X";
-      removeBtn.addEventListener("click", () => {
-        ignoreDomains = ignoreDomains.filter(d => d !== domain);
-        renderIgnoreList(ignoreDomains);
+    chrome.storage.local.set({ ignoreDomains }, () => {
+      chrome.tabs.query({}, (tabs) => {
+        tabs.forEach(tab => {
+          if (!tab.url) return;
+
+          const wasIgnored = previous.some(item => item.url === tab.url);
+          const isNowIgnored = ignoreDomains.some(item => item.url === tab.url);
+
+          if (wasIgnored && !isNowIgnored) {
+            chrome.runtime.sendMessage({ action: "resetTimer", tabId: tab.id });
+          } else if (!wasIgnored && isNowIgnored) {
+            chrome.runtime.sendMessage({ action: "stopTimer", tabId: tab.id });
+          }
+        });
       });
 
-      li.appendChild(removeBtn);
-      ignoreList.appendChild(li);
+      renderIgnoreList(ignoreDomains);
     });
-  }
+  });
+}
+
+
+  addSiteBtn.addEventListener("click", () => {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (!tabs.length || !tabs[0].url) return;
+
+    const url = tabs[0].url;
+    const title = tabs[0].title;
+
+    // Check if URL already exists
+    if (!ignoreDomains.some(item => item.url === url)) {
+      ignoreDomains.push({ url, title });
+      updateIgnoreDomains();
+    }
+  });
+});
+
+
+  toggleCheckbox.addEventListener("change", () => {
+    const isExtensionActive = toggleCheckbox.checked;
+    chrome.storage.local.set({ isExtensionActive });
+  });
 
   saveButton.addEventListener("click", () => {
     const newLimit = parseFloat(timeoutInput.value);
-    const isExtensionActive = toggleCheckbox.checked;
-
     if (isNaN(newLimit) || newLimit <= 0) {
-      alert("Please enter a valid timeout greater than 0.");
+      alert("Please enter a valid timeout value greater than 0.");
       return;
     }
-
-    chrome.storage.local.get("ignoreDomains", (data) => {
-      const previousIgnoreList = (data.ignoreDomains || []).map(d => normalizeDomain(d));
-
-      chrome.storage.local.set({
-        inactivityLimit: newLimit,
-        isExtensionActive,
-        ignoreDomains,
-      }, () => {
-        chrome.tabs.query({}, (tabs) => {
-          tabs.forEach((tab) => {
-            if (!tab.url) return;
-            const domain = normalizeDomain(new URL(tab.url).hostname);
-
-            const wasIgnored = previousIgnoreList.includes(domain);
-            const isNowIgnored = ignoreDomains.includes(domain);
-
-            if (wasIgnored && !isNowIgnored) {
-              chrome.runtime.sendMessage({ action: "resetTimer", tabId: tab.id });
-            } else if (!wasIgnored && isNowIgnored) {
-              chrome.runtime.sendMessage({ action: "stopTimer", tabId: tab.id });
-            }
-          });
-        });
-
-        alert(isExtensionActive
-          ? `Saved! Tabs will auto-close after ${newLimit} minute(s).`
-          : "Saved! But the extension is currently paused.");
-      });
-    });
+    chrome.storage.local.set({ inactivityLimit: newLimit });
   });
 });
+//This is working properly!!!
