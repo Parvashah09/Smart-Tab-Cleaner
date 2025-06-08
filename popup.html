@@ -4,26 +4,102 @@
   <title>Smart Tab Cleaner</title>
   <style>
     body {
-      font-family: sans-serif;
-      padding: 10px;
-      width: 220px;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 15px;
+      width: 260px;
+      background: #f9fafb;
     }
-    label, input, button {
+
+    .card {
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    h3 {
+      margin-top: 0;
+      font-size: 16px;
+      color: #333;
+    }
+
+    label {
+      font-size: 14px;
+      margin-bottom: 5px;
       display: block;
-      margin-bottom: 10px;
+    }
+
+    input[type="number"],
+    button {
       width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    input[type="checkbox"] {
+      margin-right: 8px;
+    }
+
+    button {
+      background-color: #2563eb;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #1d4ed8;
+    }
+
+    #ignoreList li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f3f4f6;
+      padding: 6px 10px;
+      border-radius: 6px;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+
+    #ignoreList button {
+      background: #ef4444;
+      border: none;
+      color: white;
+      border-radius: 4px;
+      padding: 2px 6px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    #ignoreList button:hover {
+      background: #dc2626;
     }
   </style>
 </head>
 <body>
-  <h3>Inactivity Timeout</h3>
-  <label>
-  <input type="checkbox" id="toggle-active">
-  Enable Smart Tab Cleaner
-</label>
-  <label for="timeout">Minutes:</label>
-  <input type="number" id="timeout" min="1" />
-  <button id="save">Save</button>
+
+  <div class="card">
+    <h3>Auto-Close Settings</h3>
+    <label>
+      <input type="checkbox" id="toggle-active">
+      Enable Smart Tab Cleaner
+    </label>
+
+    <label for="timeout">Inactivity Timeout (minutes):</label>
+    <input type="number" id="timeout" min="1" placeholder="e.g. 5" />
+    <button id="save">Save Settings</button>
+  </div>
+
+  <div class="card">
+    <h3>Ignore List</h3>
+    <button id="addSiteBtn">Add Current Site</button>
+    <ul id="ignoreList"></ul>
+  </div>
 
   <script src="popup.js"></script>
 </body>
