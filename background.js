@@ -46,15 +46,20 @@ chrome.storage.onChanged.addListener((changes) => {
       tabs.forEach((tab) => {
         if (!tab.url) return;
 
-        if (!newIgnoreURLs.includes(tab.url)) {
+        if (!newIgnoreURLs.some(item => item.url === tab.url)) {
           clearTimeout(tabTimers[tab.id]);
           clearTimeout(warningTimers[tab.id]);
+          delete tabTimers[tab.id];
+          delete warningTimers[tab.id];
           delete inactivityStartTimes[tab.id];
 
-          inactivityStartTimes[tab.id] = Date.now();
-          resetTimer(tab.id);
-          console.log(`Timers reset for tab ${tab.id} (${tab.url}) due to updated ignore list.`);
-        }
+          chrome.notifications.clear(`warn-${tab.id}`);
+
+          setTimeout(() => {
+            inactivityStartTimes[tab.id] = Date.now();
+            resetTimer(tab.id);
+          }, 500);
+        } 
       });
     });
   }
@@ -99,17 +104,26 @@ chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) =
   if (notificationId.startsWith("warn-") && buttonIndex === 0) {
     const tabId = parseInt(notificationId.split("-")[1]);
     if (tabId) {
+      // Fully cancel any scheduled timeouts
       clearTimeout(tabTimers[tabId]);
       clearTimeout(warningTimers[tabId]);
+      delete tabTimers[tabId];
+      delete warningTimers[tabId];
       delete inactivityStartTimes[tabId];
 
-      inactivityStartTimes[tabId] = Date.now();
-      resetTimer(tabId);
+      // Clear the warning notification
       chrome.notifications.clear(notificationId);
-      console.log(`Tab ${tabId} warning overridden, timer reset.`);
+
+      // Postpone inactivity tracking with a small buffer (optional)
+      setTimeout(() => {
+        inactivityStartTimes[tabId] = Date.now();
+        resetTimer(tabId);
+        console.log(`Tab ${tabId} warning overridden. New timer started.`);
+      }, 500); // slight delay ensures previous timer is fully cleared
     }
   }
 });
+
 
 function resetTimer(tabId) {
   clearTimeout(tabTimers[tabId]);
@@ -128,7 +142,7 @@ function resetTimer(tabId) {
       const isSystemTab = url.startsWith("chrome://") || url.startsWith("chrome-devtools://");
       if (isSystemTab) return;
 
-      if (data.ignoreDomains?.includes(url)) {
+      if (data.ignoreDomains?.some(item => item.url === url)) {
         console.log(`Ignoring tab ${tabId} with URL: ${url}`);
         return;
       }
@@ -212,6 +226,7 @@ chrome.runtime.onMessage.addListener((message) => {
     delete tabTimers[message.tabId];
     delete warningTimers[message.tabId];
     delete inactivityStartTimes[message.tabId];
+    chrome.notifications.clear(`warn-${message.tabId}`);
     console.log(`Stopped tracking tab ${message.tabId} due to ignore list.`);
   }
 });
