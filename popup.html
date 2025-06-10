@@ -4,10 +4,13 @@
   <title>Smart Tab Cleaner</title>
   <style>
     body {
+      height: 400px;
+      overflow: hidden;
       font-family: 'Segoe UI', sans-serif;
       padding: 15px;
-      width: 260px;
+      width: 300px;
       background: #f9fafb;
+      box-sizing: border-box;
     }
 
     .card {
@@ -29,6 +32,54 @@
       margin-bottom: 5px;
       display: block;
     }
+
+    /* Container for the toggle */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+/* Hide default checkbox */
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* The track */
+.slider {
+    position: absolute;
+    cursor: pointer;
+    background-color: #ccc;
+    border-radius: 24px;
+    width: 100%;
+    height: 100%;
+    transition: background-color 0.3s;
+}
+
+/* The circular slider */
+.slider::before {
+    content: "";
+    position: absolute;
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 2px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.3s;
+}
+
+/* Toggled state */
+.toggle-switch input:checked+.slider {
+    background-color: #4caf50;
+}
+
+.toggle-switch input:checked+.slider::before {
+    transform: translateX(26px);
+}
 
     input[type="number"],
     button {
@@ -70,6 +121,9 @@
       padding-left: 0;
       margin-top: 10px;
       list-style: none;
+      max-height: 200px;
+      overflow-y: scroll;
+      padding-right: 10px;
     }
 
     .ignore-item {
@@ -121,18 +175,30 @@
 
   <div class="card">
     <h3>Auto-Close Settings</h3>
-    <label>
+    <div style="display: flex;">
+      <p style="font-size: 14px;">Enable Smart Tab Cleaner</p>
+      <label class="toggle-switch">
       <input type="checkbox" id="toggle-active">
-      Enable Smart Tab Cleaner
+      <span class="slider"></span>
     </label>
+    </div>
 
-    <label for="timeout">Inactivity Timeout (minutes):</label>
-    <input type="number" id="timeout" min="1" placeholder="e.g. 5" />
-    <div id="timeoutError" style="color: red; font-size: 12px; display: none;">Please enter a valid number greater than 0.</div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <label for="minutes">Mins:</label>
+      <input type="number" id="minutes" min="0" value="0" style="width: 50px;"><t></t>
+
+      <label for="seconds">Secs:</label>
+      <input type="number" id="seconds" min="0" max="59" value="0" style="width: 50px;">
+    </div>
+    <div id="timeoutError" style="color: red; font-size: 12px; display: none;">Please enter a valid number greater than 0.
+    </div>
+    <div id="setTime" style="color: green; font-size: 12px; display: none;">.
+    </div>
+
     <button id="save">Save Time</button>
   </div>
 
-  <div class="card">
+  <div class="card"">
     <h3>Ignore List</h3>
     <button id="addSiteBtn">Add Current Site</button>
     <ul id="ignoreList"></ul>
@@ -141,4 +207,4 @@
   <script src="popup.js"></script>
 </body>
 </html>
-<!-- This is working properly!!! -->
+<!-- This is working properly!! -->

@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const timeoutInput = document.getElementById("timeout");
+  const minutesInput = document.getElementById("minutes");
+  const secondsInput = document.getElementById("seconds");
   const saveButton = document.getElementById("save");
   const toggleCheckbox = document.getElementById("toggle-active");
   const addSiteBtn = document.getElementById("addSiteBtn");
@@ -9,7 +10,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Load settings initially
   chrome.storage.local.get(["isExtensionActive", "inactivityLimit", "ignoreDomains"], (data) => {
-    timeoutInput.value = data.inactivityLimit || "";
+    const limit = data.inactivityLimit || 0.1;
+    const totalSeconds = limit * 60;
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = Math.round(totalSeconds % 60);
+    minutesInput.value = minutes;
+    secondsInput.value = seconds;
     toggleCheckbox.checked = data.isExtensionActive !== false;
     ignoreDomains = data.ignoreDomains || [];
     renderIgnoreList(ignoreDomains);
@@ -95,18 +101,42 @@ function updateIgnoreDomains() {
 });
 
 
+
   toggleCheckbox.addEventListener("change", () => {
     const isExtensionActive = toggleCheckbox.checked;
     chrome.storage.local.set({ isExtensionActive });
   });
 
   saveButton.addEventListener("click", () => {
-    const newLimit = parseFloat(timeoutInput.value);
-    if (isNaN(newLimit) || newLimit <= 0) {
-      alert("Please enter a valid timeout value greater than 0.");
+    const minutes = parseInt(minutesInput.value) || 0;
+    const seconds = parseInt(secondsInput.value) || 0;
+
+    const error = document.getElementById("timeoutError");
+    const setTime = document.getElementById("setTime");
+    if (minutes === 0 && seconds === 0) {
+      error.style.display = "block"
       return;
     }
-    chrome.storage.local.set({ inactivityLimit: newLimit });
+    error.style.display = "none"
+    const totalLimitInMinutes = (minutes * 60 + seconds) / 60;
+    chrome.storage.local.set({ inactivityLimit: totalLimitInMinutes });
+    if(minutes === 0){
+      if(seconds === 1) setTime.innerHTML = `${seconds} second saved as inactivity time.`
+      else setTime.innerHTML = `${seconds} seconds saved as inactivity time.`
+    }
+    else if(minutes === 1){
+      if(seconds === 1) setTime.innerHTML = `${minutes} minute ${seconds} second saved as inactivity time.`
+      else setTime.innerHTML = `${minutes} minute ${seconds} seconds saved as inactivity time.`
+    }
+    else{
+      if(seconds === 1) setTime.innerHTML = `${minutes} minutes ${seconds} second saved as inactivity time.`
+      else setTime.innerHTML = `${minutes} minutes ${seconds} seconds saved as inactivity time.`
+    }
+    setTime.style.display = "block";
+    function hidediv(){
+      setTime.style.display = "none";
+    }
+    setTimeout(hidediv, 2000);
   });
 });
-//This is working properly!!!
+//This is working properly!!
