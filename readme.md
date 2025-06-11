@@ -1,6 +1,6 @@
 # TabSweeper - Chrome Extension
 
-Smart Tab Cleaner is a Chrome extension designed to automatically close inactive tabs after a user-defined time interval. It helps keep your browser fast and clutter-free by closing tabs that haven't been used recently - without interrupting active work or media playback.
+TabSweeper is a Chrome extension designed to automatically close inactive tabs after a user-defined time interval. It helps keep your browser fast and clutter-free by closing tabs that haven't been used recently - without interrupting active work or media playback.
 
 ## Overview
 
