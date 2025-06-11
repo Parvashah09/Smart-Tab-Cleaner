@@ -1,7 +1,7 @@
 let INACTIVITY_LIMIT_MINUTES = 0.1;
 
 chrome.storage.local.get(["inactivityLimit"], (data) => {
-  if (data.inactivityLimit) {
+  if (typeof data.inactivityLimit==="number") {
     INACTIVITY_LIMIT_MINUTES = data.inactivityLimit;
   }
 });
@@ -9,6 +9,7 @@ chrome.storage.local.get(["inactivityLimit"], (data) => {
 chrome.storage.onChanged.addListener((changes) => {
   if (changes.inactivityLimit) {
     INACTIVITY_LIMIT_MINUTES = changes.inactivityLimit.newValue;
+    console.log("Updated limit to: ", INACTIVITY_LIMIT_MINUTES);
   }
 
   if (changes.isExtensionActive) {
@@ -29,6 +30,7 @@ chrome.storage.onChanged.addListener((changes) => {
             if (tab.id && !tab.pinned && !tab.audible && !tab.active && tab.url) {
               const isIgnored = ignoreList.some(item => item.url === tab.url);
               if (!isIgnored) {
+                inactivityStartTimes[tab.id] = Date.now();
                 resetTimer(tab.id);
               }
             }
@@ -229,5 +231,21 @@ chrome.runtime.onMessage.addListener((message) => {
     chrome.notifications.clear(`warn-${message.tabId}`);
     console.log(`Stopped tracking tab ${message.tabId} due to ignore list.`);
   }
+
+  if (message.action === "resetAllTabTimers") {
+    chrome.storage.local.get("ignoreDomains", (data) => {
+      const ignoreList = data.ignoreDomains || [];
+      chrome.tabs.query({}, (tabs) => {
+        for( const tab of tabs){
+
+          if (tab.id && !tab.pinned && !tab.audible && tab.status==="complete" && tab.url && !tab.url.startsWith("chrome://") && !ignoreList.some(item => item.url === tab.url)) {
+            clearTimeout(tabTimers[tab.id]);
+            clearTimeout(warningTimers[tab.id]);
+            inactivityStartTimes[tab.id] = Date.now();
+            resetTimer(tab.id);
+          }
+        }
+      })
+    })
+  }
 });
-// This is working properly!!!

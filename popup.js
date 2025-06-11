@@ -108,8 +108,8 @@ function updateIgnoreDomains() {
   });
 
   saveButton.addEventListener("click", () => {
-    const minutes = parseInt(minutesInput.value) || 0;
-    const seconds = parseInt(secondsInput.value) || 0;
+    const minutes = parseInt(minutesInput.value, 10) || 0;
+    const seconds = parseInt(secondsInput.value, 10) || 0;
 
     const error = document.getElementById("timeoutError");
     const setTime = document.getElementById("setTime");
@@ -120,6 +120,7 @@ function updateIgnoreDomains() {
     error.style.display = "none"
     const totalLimitInMinutes = (minutes * 60 + seconds) / 60;
     chrome.storage.local.set({ inactivityLimit: totalLimitInMinutes });
+    chrome.runtime.sendMessage({ action: "resetAllTabTimers" });
     if(minutes === 0){
       if(seconds === 1) setTime.innerHTML = `${seconds} second saved as inactivity time.`
       else setTime.innerHTML = `${seconds} seconds saved as inactivity time.`
@@ -139,4 +140,3 @@ function updateIgnoreDomains() {
     setTimeout(hidediv, 2000);
   });
 });
-//This is working properly!!

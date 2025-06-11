@@ -47,7 +47,7 @@ This Chrome extension offers a convenient way to manage inactive tabs without af
    - Are not in the ignorelist
    - Have exceeded the set timeout
 
-## 📁 File Structure
+## File Structure
 
 ```bash
 smart-tab-cleaner/
