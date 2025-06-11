@@ -1,12 +1,16 @@
 {
     "manifest_version" : 3,
-    "name" : "Smart Tab Cleaner",
+    "name" : "TabSweeper",
     "version" : "1.0",
     "description" : "Automatically closes inactive browser tabs.",
     "permissions" : ["tabs", "storage", "alarms", "notifications"],
     "background" : {
         "service_worker": "background.js"
-
+    },
+    "icons": {
+        "16": "icon.png",
+        "48": "icon.png",
+        "128": "icon.png"
     },
     "action": {
         "default_popup": "popup.html",
