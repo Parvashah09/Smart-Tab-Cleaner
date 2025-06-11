@@ -11,7 +11,7 @@ This Chrome extension offers a convenient way to manage inactive tabs without af
 ### Core Functionality
 
 - Automatically closes inactive tabs based on a customizable timeout
-- Visual warning popup before closing a tab
+- Visual warning popup before closing a tab with an option of not closing the tab for now.
 - Timer precision up to seconds (not just minutes)
 
 ### Smart Filtering
@@ -47,21 +47,22 @@ This Chrome extension offers a convenient way to manage inactive tabs without af
    - Are not in the ignorelist
    - Have exceeded the set timeout
 
-## File Structure
+## 📁 File Structure
 
+```bash
 smart-tab-cleaner/
-|-- background.js # Tab activity tracking, logic for timer and tab closing
-|-- popup.html # UI for settings input
-|-- popup.js # JS logic for UI interactions and storage
-|-- manifest.json # Chrome extension metadata and permissions
-|-- icons/ # Folder for extension icons
-|-- styles.css # Optional styling for popup UI
-
+├── background.js        # Tab activity tracking, logic for timer and tab closing
+├── popup.html           # UI for settings input
+├── popup.js             # JS logic for UI interactions and storage
+├── manifest.json        # Chrome extension metadata and permissions
+├── icons/               # Folder for extension icons
+└── styles.css           # Optional styling for popup UI
+```
 
 ## Ignorelist
 
 The ignorelist lets you define specific URLs to exclude from being auto-closed. For example:
-**youtube.com**
+**youtube.com** or
 **mail.google.com**
 
 These domains will never be affected by the cleaner, regardless of inactivity.
