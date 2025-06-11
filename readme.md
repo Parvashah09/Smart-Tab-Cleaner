@@ -50,7 +50,7 @@ This Chrome extension offers a convenient way to manage inactive tabs without af
 ## File Structure
 
 ```bash
-smart-tab-cleaner/
+TabSweeper/
 ├── background.js        # Tab activity tracking, logic for timer and tab closing
 ├── popup.html           # UI for settings input
 ├── popup.js             # JS logic for UI interactions and storage
@@ -96,4 +96,4 @@ Settings are retained across browser sessions.
 
 ## Note
 
-Smart Tab Cleaner is designed for personal use and is not affiliated with or endorsed by Google. It's open-source and intended for educational and productivity purposes.
+TabSweepwe is designed for personal use and is not affiliated with or endorsed by Google. It's open-source and intended for educational and productivity purposes.
