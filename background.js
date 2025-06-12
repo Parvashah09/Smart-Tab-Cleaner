@@ -2,7 +2,7 @@ let INACTIVITY_LIMIT_MINUTES = 0.1;
 
 chrome.storage.local.get(["inactivityLimit"], (data) => {
   if (typeof data.inactivityLimit==="number") {
-    INACTIVITY_LIMIT_MINUTES = data.inactivityLimit;
+    INACTIVITY_LIMIT_MINUTES = data.inactivityLimit ?? 0.1;
   }
 });
 
@@ -73,17 +73,36 @@ const inactivityStartTimes = {};
 let lastActiveTabId = null;
 
 chrome.tabs.onActivated.addListener(({ tabId }) => {
-  if (lastActiveTabId !== null && lastActiveTabId !== tabId) {
-    delete inactivityStartTimes[lastActiveTabId];
-    resetTimer(lastActiveTabId);
-  }
+  const prevTabId = lastActiveTabId;
+  lastActiveTabId = tabId;
 
   clearTimeout(tabTimers[tabId]);
   clearTimeout(warningTimers[tabId]);
   delete inactivityStartTimes[tabId];
 
-  lastActiveTabId = tabId;
+  if (prevTabId !== null && prevTabId !== tabId) {
+    chrome.storage.local.get("ignoreDomains", (data) => {
+      const ignoreList = data.ignoreDomains || [];
+
+      chrome.tabs.get(prevTabId, (tab) => {
+        if (chrome.runtime.lastError || !tab || !tab.url) return;
+
+        const isIgnored = ignoreList.some(item => item.url === tab.url);
+        const isSystemTab = tab.url.startsWith("chrome://") || tab.url.startsWith("chrome-devtools://");
+
+        if (!tab.pinned && !tab.audible && !isSystemTab && !isIgnored) {
+          clearTimeout(tabTimers[prevTabId]);
+          clearTimeout(warningTimers[prevTabId]);
+          delete inactivityStartTimes[prevTabId];
+
+          inactivityStartTimes[prevTabId] = Date.now();
+          resetTimer(prevTabId);
+        }
+      });
+    });
+  }
 });
+
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (changeInfo.status === "complete") {
@@ -128,6 +147,8 @@ chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) =
 
 
 function resetTimer(tabId) {
+  console.log(`Resetting timer for tab ${tabId}, current limit: ${INACTIVITY_LIMIT_MINUTES} minutes`);
+
   clearTimeout(tabTimers[tabId]);
   clearTimeout(warningTimers[tabId]);
 
